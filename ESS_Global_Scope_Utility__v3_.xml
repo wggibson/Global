@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?><unload unload_date="2026-09-16 16:22:03"><sys_remote_update_set action="INSERT_OR_UPDATE"><application display_value="Global">global</application><application_name>Global</application_name><application_scope>global</application_scope><application_version/><collisions/><commit_date/><deleted/><description>Global scope utility helper leveraged by the Employee self-service and portal application to support global scope authorizations</description><inserted/><name>ESS Global Scope Utility (v3)</name><origin_sys_id/><parent/><release_date/><remote_base_update_set/><remote_parent_id/><remote_sys_id>6e317aff470b871000e77bb4416d431b</remote_sys_id><state>loaded</state><summary/><sys_class_name>sys_remote_update_set</sys_class_name><sys_created_by>eugene.sikorski</sys_created_by><sys_created_on>2026-09-16 16:22:03</sys_created_on><sys_id>d9b908764717879000e77bb4416d4391</sys_id><sys_mod_count>0</sys_mod_count><sys_updated_by>eugene.sikorski</sys_updated_by><sys_updated_on>2026-09-16 16:22:03</sys_updated_on><update_set/><update_source/><updated/></sys_remote_update_set><sys_update_xml action="INSERT_OR_UPDATE"><action>INSERT_OR_UPDATE</action><application display_value="Global">global</application><category>customer</category><comments/><name>sys_script_include_3f345ec74f6e3100b530b82ca310c771</name><payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_script_include"&gt;&lt;sys_script_include action="INSERT_OR_UPDATE"&gt;&lt;access&gt;public&lt;/access&gt;&lt;active&gt;true&lt;/active&gt;&lt;api_name&gt;global.EVGCMS_ScopeHelpUtil&lt;/api_name&gt;&lt;client_callable&gt;false&lt;/client_callable&gt;&lt;description&gt;Global Scope helper script supporting the ESS Portal and Catalog Application&amp;#13;
+&amp;#13;
+Version 3.0&lt;/description&gt;&lt;name&gt;EVGCMS_ScopeHelpUtil&lt;/name&gt;&lt;script&gt;&lt;![CDATA[var EVGCMS_ScopeHelpUtil = Class.create();
+EVGCMS_ScopeHelpUtil.prototype = {
+    initialize: function() {
+    },
+	
+	canViewCatalogItem : function( catItemID ) {
+		var catItem = GlideappCatalogItem.get(catItemID);
+		if ( !catItem.canView() ) {
+			return false;
+		}
+		
+		return true;
+	},
+	
+	canViewCategory : function( categoryID ) {
+		var category = GlideappCategory.get(categoryID);
+		if ( category.canView() ) {	
+			return true;	
+		}
+		
+		return false;
+	},
+	
+	canReadArticle: function(kb) {
+		var knowledgeHelper = new SNC.KnowledgeHelper(); 
+		if (kb.getTableName() == "kb_knowledge" || kb.getTableName() == "kb_knowledge_base") {
+			if ( knowledgeHelper.canRead(kb) ) {
+				var kbHelper = new KnowledgeHelp(kb);
+				return kbHelper.hasRights(kb);
+			}
+        }
+
+		return false;
+	},
+	
+	getRequestItemVariables : function( requestID ) {
+		var aReturnList = [];
+		try {
+			var set = new GlideappVariablePoolQuestionSet();
+			set.setRequestID(requestID);
+			set.load();
+		
+			var vs = set.getFlatQuestions();
+			var iNumberOfVars = vs.size();		
+			for (var i = 0; i &lt; iNumberOfVars; i++) {
+				var newVar = {};
+				var currentVar = vs.get(i);
+				newVar.name = currentVar.getName().toString();
+				newVar.label = newVar.name;
+				newVar.displayValue = "";
+				if ( typeof currentVar.getLabel == "function" ) {			
+					var sTmpLabel = currentVar.getLabel();
+					if ( sTmpLabel != null ) {
+						newVar.label = sTmpLabel.toString();
+					}
+				}
+				
+				if ( typeof currentVar.getDisplayValue == "function" ) {			
+					var sTmpValue = currentVar.getDisplayValue();
+					if ( sTmpValue != null ) {
+						newVar.displayValue = sTmpValue.toString();
+					}
+				}
+				aReturnList.push(newVar);
+			}
+		} catch (err ) {
+			gs.error('[EVGCMS_ScopeHelpUtil.getRequestItemVariables] Error: ' + err);	
+		}
+		
+		return aReturnList;
+	},
+	
+	setPreference : function(sPrefName, sPrefValue) {
+		gs.getUser().setPreference(sPrefName, sPrefValue);
+	},
+	
+	getLiveFeedProfile : function( sUserID ) {
+		if ( sUserID == null ) { sUserID = gs.getUserID(); }
+		var util = new LiveFeedUtil();
+		var tmpProfileID = util.getUserProfile(sUserID);
+		
+		return new String(tmpProfileID);
+	},
+	
+	getAllJournalEntries : function( fRecord ) {
+		return fRecord.comments.getJournalEntry(-1);
+	},
+	
+	getUserTimeZone : function() {
+		var tz = gs.getSession().getTimeZone();
+		return tz;
+	},
+	
+	setTZ : function( dDate, tz ) {
+		if ( typeof dDate != "undefined" ) {
+			dDate.setTZ(tz);
+		}
+		
+		return dDate;
+	},
+	
+	saveRecord : function( fRecord ) {
+		return fRecord.update();
+	},
+	
+	refreshNavigator : function() {
+		var notification = new UINotification('system_event');
+		notification.setAttribute('event', 'refresh_nav');
+		notification.send();
+	},
+	
+	isCMS : function() {
+		return GlideTransaction.get().isVirtual();
+	},
+	
+	eventQueueScheduled : function(sEventReg, fTargetRec, sUserID, sUserName, dDateTime) {
+		gs.eventQueueScheduled(sEventReg, fTargetRec, sUserID, sUserName, dDateTime);
+	},
+	
+	getSessionToken : function() {
+		return gs.getSessionToken();
+	},
+	
+	getWorkflowStageObj : function( fRecord, stageField ) {
+		var workflowStageObj = {};
+		try {
+			var stageChoiceList = this.getWorkflowStages(fRecord, stageField);
+			var processedChoiceList = this.getWorkflowIcons("fRecord.stage", fRecord[stageField], fRecord).process(stageChoiceList);
+			workflowStageObj = this.convertToWorkflowStageObj(processedChoiceList);
+		} catch (err) {
+		}
+		
+		return workflowStageObj;
+	},
+	
+	getWorkflowStages : function( fRecord, stageField ) {
+		var evg_answer = new GlideChoiceList();
+		var version = null;
+		var contextID = null;
+		try {
+			if (fRecord.context) {
+				// We have already started a workflow for the item, use its version
+				version = fRecord.context.workflow_version;
+				contextID = fRecord.context.sys_id.toString();
+			} else {
+				// We have not started a workflow for the item yet (pending request approval) so
+				// determine the version we will eventually be using
+				if ( fRecord.cat_item != undefined ) {
+					if ( !fRecord.cat_item.workflow.nil() ) {
+						version = new Workflow().getVersion(fRecord.cat_item.workflow).sys_id + '';
+					} else {
+						evg_answer.add("waiting_for_approval", gs.getMessage("Waiting for Approval")); // always add this
+						var planID = GlideappDeliveryPlan.resolvePlanID(fRecord);
+						var plan = GlideAbstractExecutionPlan.get(planID);
+						if (plan != null) {
+							var tokens = plan.getSortedTokenList();
+							for (var xxx = 0; xxx &lt; tokens.size(); xxx++) {
+								var tt = tokens.get(xxx);
+								evg_answer.add(tt.getName(), gs.getMessage(tt.getName()));
+							}
+						}
+   
+						evg_answer.add("closed_incomplete", gs.getMessage("Closed Incomplete"));
+						evg_answer.add("Request Cancelled", gs.getMessage("Request Cancelled"));
+						evg_answer.add("complete", gs.getMessage("Completed"));	
+					}
+				} else {
+					var contextRec = new Workflow().getContexts(fRecord);
+					if (contextRec.next()) {
+						version = contextRec.workflow_version;
+						contextID = contextRec.sys_id.toString();
+					} else {
+						var clg = new GlideChoiceListGenerator(fRecord.getTableName(), stageField);
+						clg.setCache(false);
+						clg.setNone(false);
+						clg.get(answer);
+						var iSelected = 0;
+						for ( var q=0; q&lt;evg_answer.getSize(); q++ ) {
+							var choiceItem = evg_answer.getChoice(q);
+							if ( choiceItem.value == fRecord[stageField] ) {
+								choiceItem.setSelected(true);
+							}
+						}
+					}
+				}
+			}
+		
+			if ( version != null &amp;&amp; version != "") {
+				var fScriptRec = new GlideRecord('sys_script');
+				fScriptRec.script = "var wfs = new WorkflowStages();wfs.setWorkflowVersion(version, contextID);wfs.getChoices(current[stageField], answer);";
+			
+				var evaluator = new GlideScopedEvaluator();
+				var vars = {'current' : fRecord, 'version': version, 'contextID':contextID, 'stageField':stageField, 'answer':evg_answer};
+				evaluator.evaluateScript(fScriptRec, 'script', vars);
+				evg_answer = evaluator.getVariable('answer');
+
+				if ( evg_answer.getSize() == 0 ) {
+					var fScriptRec2 = new GlideRecord('sys_script');
+					fScriptRec2.script = "var wfs = new WorkflowStages();wfs.getSimpleChoiceList(current.getTableName(), stageField, answer);";
+					var evaluator2 = new GlideScopedEvaluator();
+					var vars2 = {'current' : fRecord, 'stageField':stageField, 'answer':evg_answer};
+					evaluator2.evaluateScript(fScriptRec2, 'script', vars2);
+					evg_answer = evaluator2.getVariable('answer');
+				}
+			}		
+		} catch( err) {
+		}
+				
+		return evg_answer;
+	},
+	
+	getWorkflowIcons : function( elementName, element, fRecord ) {
+		return new EVGCMS_ScopeWorkflowIcons(elementName, element, fRecord);
+	},
+	
+	convertToWorkflowStageObj : function( cl ) {
+		var returnObj = [];
+		try {
+			for (var i = 0; i &lt; cl.size(); i++) {
+				var c = cl.getChoice(i);
+				var choiceItem = {};
+				choiceItem.value = c.getValue();
+				choiceItem.label = c.getLabel();
+				choiceItem.image = c.image;
+				choiceItem.icon = this.getWorkflowIcon(choiceItem.image);
+				returnObj.push(choiceItem);
+			}
+		} catch (err) {
+		}
+      
+		return returnObj;
+	},
+	
+	getWorkflowIcon : function( sImage ) {
+		var sImageKey = "evgcms_stageimage::"+sImage;
+		var sReturnIcon = gs.getMessage(sImageKey);
+		if ( sImageKey != sReturnIcon ) {
+			return sReturnIcon;	
+		}
+		
+		return "fa-circle blue";
+	},
+	
+	templateOrMacroExists : function( sTemplateName ) {
+		return gs.templateOrMacroExists( sTemplateName );
+	},
+	
+	getMyRoles : function() {
+		return gs.getSession().getRoles();
+	},
+	
+	addItemToCart : function( cartName, catItemID, quantity, vars) {
+		var cart = new EVGCMS_CartUtil(cartName, gs.getUserID());
+		var cartItemID = cart.addItem(catItemID, quantity);
+		for ( var key in vars ) {
+			cart.setVariable(cartItemID, key, vars[key]);
+		}
+		
+		return cartItemID;
+	},
+	
+	removeItemFromCart : function( id) {
+		var c = new GlideappCart();
+		c.remove(id);
+	},
+	
+	placeOrder : function( request, response ) {
+		var c =  new GlideappCart();
+		c.addToCart(request);
+		return new CatalogTransactionCheckout(request, response).execute(); 
+	},
+	
+	updateCart : function( request, cartItem ) {
+		var cartName = request.getParameter("sysparm_cart_name");
+		var c = new GlideappCart(cartName);
+		c.updateCart(request, cartItem);
+	},
+	
+	getCartItemPrice : function( fCartItemRec, bRecurring ) {
+		if ( bRecurring == null ) { bRecurring = false; }
+		var calculator;
+		if ( bRecurring ) {
+			calculator = new CatalogRecurringPriceCalculator(fCartItemRec);
+		} else {
+			calculator = new CatalogPriceCalculator(fCartItemRec);
+		}
+		return calculator.calcPrice();
+	},
+	
+	getCartItemVariables : function( fCartItemRec ) {
+		var aReturnData = [];
+		var theLabels = new CatalogLabelEvaluator(fCartItemRec).getLabels();
+		for ( var i=0; i&lt;theLabels.length; i++ ) {
+			var tmpVarObj = {};
+			tmpVarObj.question_label = theLabels[i][0];
+			tmpVarObj.display_value = theLabels[i][1];
+			tmpVarObj.macro = theLabels[i][2];
+			tmpVarObj.question_id = theLabels[i][3];
+			aReturnData.push(tmpVarObj);
+		}
+		
+		return aReturnData;
+	},
+	
+	getCatalogItemIDs_ForCategory : function( sCategoryID, sSCItemClass ) {
+		var itemList = [];
+		try {
+			var category = GlideappCategory.get(sCategoryID);
+			var tmpItems = category.getItemsNoDuplicates().toArray();
+			for ( var x=0;x&lt;tmpItems.length; x++) {
+				if ( tmpItems[x].canView() ) {
+					itemList.push(tmpItems[x].getID());
+				}
+			}
+		} catch( err) {
+			gs.error('[EVGCMS_ScopeHelpUtil.getCatalogItemIDs_ForCategory] ERROR: '+ err);	
+		}
+			
+		return itemList;
+	},
+	
+	deleteRecord : function( fRecord ) {
+		return fRecord.deleteRecord();
+	},
+	
+	insertRecord : function( fRecord ) {
+		return fRecord.insert();
+	},
+	
+	incrementViewCount : function( fRecord ) {
+		fRecord.incrementViewCount();
+	},
+	
+	spLogStat : function (spEngine, sView, sTable, sID, sLabel) {
+		spEngine(sView, sTable, sID, sLabel);
+	},
+	
+	isDateType : function(element) {
+		return element.getED().isDateType();
+	},
+	
+	writeJournalUpdate : function( fRecord, inputField, inputValue) {
+		fRecord.setDisplayValue(inputField, inputValue);
+		if ( fRecord.update() ) {
+			return true;
+		}
+		
+		return false;
+	},
+	
+	getStageLabels : function( fRecord) {
+		try {
+			var cl = new GlideChoiceList();
+			GlideController.putGlobal("answer", cl);
+			GlideController.putGlobal("current", fRecord);
+			sc_req_item_stageGetChoices();
+			return JSON.parse(cl.toJSON());
+		} catch (err) {
+			gs.error('[getStageLabels] Error:'+err);
+			return [];
+		}
+	},
+	
+	choieListToJSON : function(cl) {
+		try {
+			var returnJSON = [];
+			for (var i = 0; i &lt; cl.size(); i++) {
+				var c = cl.getChoice(i);
+				var choiceItem = {};
+				choiceItem.value = c.getValue();
+				choiceItem.label = c.getLabel();
+				returnJSON.push(choiceItem);
+			}
+			
+			return returnJSON;
+		} catch(err) {
+			gs.error('[EVGCMS_ScopeHelpUtil.choieListToJSON] Error:'+err);
+			return [];
+		}
+	},
+	
+	getCurrencyCode : function() {
+		var locale = GlideLocale.get();
+		return locale.getCurrencyCode();
+	},
+	
+	calculateSLA : function( fTaskSLA, bCalc, dEndTime) {
+		SLACalculatorNG.calculateSLA(fTaskSLA, bCalc, dEndTime);
+	},
+
+    type: 'EVGCMS_ScopeHelpUtil'
+};
+
+/**
+ * This is only used to handle Request Items with a Delivery Plan or a Workflow.
+ */
+gs.include("PrototypeServer");
+
+var EVGCMS_ScopeWorkflowIcons = Class.create();
+EVGCMS_ScopeWorkflowIcons.prototype = Object.extendsObject(WorkflowIconsStages, { 
+	initialize: function(elementName, element, fRecord) {
+		this.elementName = elementName;
+		this.element = element;      
+		this.gr = fRecord;
+		if (!this.gr.cat_item.workflow || this.gr.cat_item.workflow.nil()) {
+			this.handler = new GlideappRequestItemWorkflow(this.gr);
+		} else {
+			this.handler = null;
+		}
+	},
+   
+	process: function(c) {
+		if (this.handler) {
+			return this.handler.generateChoices(c);
+		}
+		
+		if ( c != null &amp;&amp; c != "undefined" ) {
+			for (var i = 0; i &lt; c.getSize(); i++) {
+				var choiceItem = c.getChoice(i);
+			}
+		}
+
+		return WorkflowIconsStages.prototype.process.call(this, c);
+	},
+ 
+   type: "EVGCMS_ScopeWorkflowIcons"
+});
+
+var EVGCMS_CartUtil = Class.create();
+EVGCMS_CartUtil.prototype = {
+    initialize: function(cartName, userID) {
+        this.cartName = !cartName ? null : cartName;
+        this.userID = !userID ? null : userID;
+
+        this.cart = this.getCart();
+    },
+
+    getCart: function() {
+        var cart = GlideappCart.getCartForRhino(this.cartName, this.userID);
+        return cart.getGlideRecord();
+    },
+
+    clearCart: function() {
+        var id = this.cart.sys_id;
+        var kids = new GlideRecord('sc_cart_item');
+        kids.addQuery('cart', id);
+        kids.deleteMultiple();
+    },
+    
+    deleteCart: function() {
+        var cart = GlideappCart.getCartForRhino(this.cartName, this.userID);
+        cart.empty();
+    },
+
+    addItem: function(itemID, quantity) {
+        if (typeof (quantity) == 'undefined')
+            quantity = 1;
+        var gr = new GlideRecord('sc_cart_item');
+        gr.initialize();
+        gr.cart = this.cart.sys_id;
+        gr.cat_item = itemID;
+        gr.quantity = quantity;
+        var rc = gr.insert();
+        this.prepVariables(itemID, rc);
+        return rc;
+    },
+
+    prepVariables: function(itemID, cart_id) {
+        var ci = GlideappCatalogItem.get(itemID);
+        var gr = ci.getStandaloneVariables();
+		var seq = ci.getKeySequence();
+        while (gr.next()) {
+            var question = new GlideappQuestion(gr.sys_id);
+            var variable = new GlideRecord('sc_item_option');
+            variable.initialize();
+            variable.value.setValue(question.getValue());
+            variable.item_option_new = gr.sys_id;
+            variable.cart_item = cart_id;
+			for (var i = 0; i &lt; seq.size(); i++) {
+				if (seq.get(i) + "" == gr.sys_id + "")
+		            variable.order = i + "";
+			}
+            variable.insert();
+        }
+    },
+
+    setVariable: function(cartID, variable_name, value) {
+        var variable = new GlideRecord('sc_item_option');
+        variable.addQuery('cart_item', cartID);
+        variable.addQuery('item_option_new', variable_name).addOrCondition('item_option_new.name', variable_name);
+        variable.query();
+        if (variable.next()) {
+			variable.value.setValue(value);
+            variable.update();
+        }
+    },
+
+    placeOrder: function() {
+        var req = new GlideappRequestNew();
+        var rc = req.copyCart(this.cartName, this.userID);
+        this.clearCart();
+        return rc;
+    },
+	
+	type: "EVGCMS_CartUtil"
+};]]&gt;&lt;/script&gt;&lt;sys_class_name&gt;sys_script_include&lt;/sys_class_name&gt;&lt;sys_created_by&gt;jbenedict&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2015-03-06 22:24:51&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_id&gt;3f345ec74f6e3100b530b82ca310c771&lt;/sys_id&gt;&lt;sys_mod_count&gt;128&lt;/sys_mod_count&gt;&lt;sys_name&gt;EVGCMS_ScopeHelpUtil&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_script_include_3f345ec74f6e3100b530b82ca310c771&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;jbenedict&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2016-07-18 22:25:54&lt;/sys_updated_on&gt;&lt;/sys_script_include&gt;&lt;/record_update&gt;</payload><payload_hash/><remote_update_set display_value="ESS Global Scope Utility (v3)">d9b908764717879000e77bb4416d4391</remote_update_set><replace_on_upgrade>false</replace_on_upgrade><sys_created_by>eugene.sikorski</sys_created_by><sys_created_on>2026-09-16 16:22:03</sys_created_on><sys_id>11b908764717879000e77bb4416d4393</sys_id><sys_mod_count>0</sys_mod_count><sys_recorded_at>1a07da48f3e0000001</sys_recorded_at><sys_updated_by>eugene.sikorski</sys_updated_by><sys_updated_on>2026-09-16 16:22:03</sys_updated_on><table/><target_name>EVGCMS_ScopeHelpUtil</target_name><type>Script Include</type><update_domain>global</update_domain><update_guid/><update_guid_history/><update_set/><view/></sys_update_xml><sys_update_xml action="INSERT_OR_UPDATE"><action>INSERT_OR_UPDATE</action><application display_value="Global">global</application><category>customer</category><comments/><name>sys_ui_action_cf13e72513e8a2005c877b1a6144b069</name><payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update sys_domain="global" table="sys_ui_action"&gt;&lt;sys_ui_action action="INSERT_OR_UPDATE"&gt;&lt;action_name/&gt;&lt;active&gt;true&lt;/active&gt;&lt;client&gt;false&lt;/client&gt;&lt;comments/&gt;&lt;condition&gt;(gs.hasRole('admin') || current.owned_by == gs.getUserID()) &amp;amp;&amp;amp; (!new x_ever_metro_porta.EVGCMS_Services().liveFeedExists(current.sys_id))&lt;/condition&gt;&lt;form_action&gt;true&lt;/form_action&gt;&lt;form_button&gt;false&lt;/form_button&gt;&lt;form_context_menu&gt;false&lt;/form_context_menu&gt;&lt;form_link&gt;true&lt;/form_link&gt;&lt;hint/&gt;&lt;list_action&gt;false&lt;/list_action&gt;&lt;list_banner_button&gt;false&lt;/list_banner_button&gt;&lt;list_button&gt;false&lt;/list_button&gt;&lt;list_choice&gt;false&lt;/list_choice&gt;&lt;list_context_menu&gt;false&lt;/list_context_menu&gt;&lt;list_link&gt;false&lt;/list_link&gt;&lt;list_save_with_form_button&gt;false&lt;/list_save_with_form_button&gt;&lt;name&gt;Create Live Feed Group&lt;/name&gt;&lt;onclick/&gt;&lt;order&gt;5000&lt;/order&gt;&lt;script&gt;&lt;![CDATA[new GlideappLiveFeedUIAction().follow(current);
+action.setRedirectURL(current);]]&gt;&lt;/script&gt;&lt;show_insert&gt;true&lt;/show_insert&gt;&lt;show_multiple_update&gt;false&lt;/show_multiple_update&gt;&lt;show_query&gt;false&lt;/show_query&gt;&lt;show_update&gt;true&lt;/show_update&gt;&lt;sys_class_name&gt;sys_ui_action&lt;/sys_class_name&gt;&lt;sys_created_by&gt;jbenedict&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2016-07-11 14:46:52&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_domain&gt;global&lt;/sys_domain&gt;&lt;sys_id&gt;cf13e72513e8a2005c877b1a6144b069&lt;/sys_id&gt;&lt;sys_mod_count&gt;1&lt;/sys_mod_count&gt;&lt;sys_name&gt;Create Live Feed Group&lt;/sys_name&gt;&lt;sys_overrides/&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_ui_action_cf13e72513e8a2005c877b1a6144b069&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;jbenedict&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2016-07-11 14:53:24&lt;/sys_updated_on&gt;&lt;table&gt;cmdb_ci_service&lt;/table&gt;&lt;ui11_compatible&gt;true&lt;/ui11_compatible&gt;&lt;ui16_compatible&gt;false&lt;/ui16_compatible&gt;&lt;/sys_ui_action&gt;&lt;/record_update&gt;</payload><payload_hash/><remote_update_set display_value="ESS Global Scope Utility (v3)">d9b908764717879000e77bb4416d4391</remote_update_set><replace_on_upgrade>false</replace_on_upgrade><sys_created_by>eugene.sikorski</sys_created_by><sys_created_on>2026-09-16 16:22:03</sys_created_on><sys_id>59b908764717879000e77bb4416d4393</sys_id><sys_mod_count>0</sys_mod_count><sys_recorded_at>1a07da48f500000001</sys_recorded_at><sys_updated_by>eugene.sikorski</sys_updated_by><sys_updated_on>2026-09-16 16:22:03</sys_updated_on><table>cmdb_ci_service</table><target_name>Create Live Feed Group</target_name><type>UI Action</type><update_domain>global</update_domain><update_guid/><update_guid_history/><update_set/><view/></sys_update_xml><sys_update_xml action="INSERT_OR_UPDATE"><action>INSERT_OR_UPDATE</action><application display_value="Global">global</application><category>customer</category><comments/><name>sys_ui_macro_b3f7a0014fb67100b530b82ca310c7dc</name><payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;record_update table="sys_ui_macro"&gt;&lt;sys_ui_macro action="INSERT_OR_UPDATE"&gt;&lt;active&gt;true&lt;/active&gt;&lt;category&gt;general&lt;/category&gt;&lt;description&gt;Renders variables on catalog items&lt;/description&gt;&lt;media_type/&gt;&lt;name&gt;evgcms_sc_questions&lt;/name&gt;&lt;scoped_name/&gt;&lt;sys_class_name&gt;sys_ui_macro&lt;/sys_class_name&gt;&lt;sys_created_by&gt;jbenedict&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2015-03-12 19:39:48&lt;/sys_created_on&gt;&lt;sys_customer_update&gt;true&lt;/sys_customer_update&gt;&lt;sys_id&gt;b3f7a0014fb67100b530b82ca310c7dc&lt;/sys_id&gt;&lt;sys_mod_count&gt;6&lt;/sys_mod_count&gt;&lt;sys_name&gt;evgcms_sc_questions&lt;/sys_name&gt;&lt;sys_package display_value="Global" source="global"&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_replace_on_upgrade&gt;false&lt;/sys_replace_on_upgrade&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_ui_macro_b3f7a0014fb67100b530b82ca310c7dc&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;jbenedict&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2015-03-12 19:55:58&lt;/sys_updated_on&gt;&lt;xml&gt;&lt;![CDATA[&lt;?xml version="1.0" encoding="utf-8" ?&gt;
+&lt;j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null"&gt;
+	&lt;g:evaluate jelly="true"&gt;
+		var sc_cat_item = new GlideRecord('sc_cat_item');
+		sc_cat_item.get(jelly.jvar_cat_item_id);
+		sc_cat_item_id = sc_cat_item.sys_id;
+	&lt;/g:evaluate&gt;
+	&lt;!-- 
+	&lt;div&gt;Calling evgcms_sc_questions UI macro in global scope, ID provided: ${jvar_cat_item_id}&lt;/div&gt;
+	&lt;div&gt;sc_cat_item = ${sc_cat_item.getDisplayValue()} | sc_cat_item_id = ${sc_cat_item_id}&lt;/div&gt;
+	--&gt;
+	&lt;g:inline template="com.glideapp.servicecatalog_item_or_bundle.xml" /&gt;
+&lt;/j:jelly&gt;]]&gt;&lt;/xml&gt;&lt;/sys_ui_macro&gt;&lt;/record_update&gt;</payload><payload_hash/><remote_update_set display_value="ESS Global Scope Utility (v3)">d9b908764717879000e77bb4416d4391</remote_update_set><replace_on_upgrade>false</replace_on_upgrade><sys_created_by>eugene.sikorski</sys_created_by><sys_created_on>2026-09-16 16:22:03</sys_created_on><sys_id>91b908764717879000e77bb4416d4394</sys_id><sys_mod_count>0</sys_mod_count><sys_recorded_at>1a07da48f350000001</sys_recorded_at><sys_updated_by>eugene.sikorski</sys_updated_by><sys_updated_on>2026-09-16 16:22:03</sys_updated_on><table/><target_name>evgcms_sc_questions</target_name><type>Macro</type><update_domain>global</update_domain><update_guid/><update_guid_history/><update_set/><view/></sys_update_xml><sys_update_xml action="INSERT_OR_UPDATE"><action>INSERT_OR_UPDATE</action><application display_value="Global">global</application><category>customer</category><comments/><name>sc_catalog_site_9abfae244f367100b530b82ca310c7bd</name><payload><![CDATA[<?xml version="1.0" encoding="UTF-8"?><record_update table="sc_catalog_site"><sc_catalog_site action="INSERT_OR_UPDATE"><cms_continue_shopping>request_home.do</cms_continue_shopping><cms_home>home.do</cms_home><cms_search>search_results.do</cms_search><content_site display_value="EVG CMS Portal">b2f5e0c2e83fa5007f445c7a31655744</content_site><sc_catalog display_value="Service Catalog">e0d08b13c3330100c8b837659bba8fb4</sc_catalog><sys_class_name>sc_catalog_site</sys_class_name><sys_created_by>jbenedict</sys_created_by><sys_created_on>2015-03-11 16:15:49</sys_created_on><sys_customer_update>true</sys_customer_update><sys_id>9abfae244f367100b530b82ca310c7bd</sys_id><sys_mod_count>0</sys_mod_count><sys_name>EVG CMS Portal.Service Catalog</sys_name><sys_package display_value="Global" source="global">global</sys_package><sys_policy/><sys_replace_on_upgrade>false</sys_replace_on_upgrade><sys_scope display_value="Global">global</sys_scope><sys_update_name>sc_catalog_site_9abfae244f367100b530b82ca310c7bd</sys_update_name><sys_updated_by>jbenedict</sys_updated_by><sys_updated_on>2015-03-11 16:15:49</sys_updated_on></sc_catalog_site></record_update>]]></payload><payload_hash/><remote_update_set display_value="ESS Global Scope Utility (v3)">d9b908764717879000e77bb4416d4391</remote_update_set><replace_on_upgrade>false</replace_on_upgrade><sys_created_by>eugene.sikorski</sys_created_by><sys_created_on>2026-09-16 16:22:03</sys_created_on><sys_id>d5b908764717879000e77bb4416d4392</sys_id><sys_mod_count>0</sys_mod_count><sys_recorded_at>1a07da48f460000001</sys_recorded_at><sys_updated_by>eugene.sikorski</sys_updated_by><sys_updated_on>2026-09-16 16:22:03</sys_updated_on><table/><target_name>EVG CMS Portal.Service Catalog</target_name><type>Catalog Site</type><update_domain>global</update_domain><update_guid/><update_guid_history/><update_set/><view/></sys_update_xml></unload>
