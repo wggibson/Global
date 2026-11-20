@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<unload unload_date="2026-11-20 14:37:59">
+<sys_remote_update_set action="INSERT_OR_UPDATE">
+<application>global</application>
+<application_name>Global</application_name>
+<application_scope>global</application_scope>
+<description/>
+<name>new update set 16 child</name>
+<origin_sys_id>6608d6af476c939000e77bb4416d43ce</origin_sys_id>
+<release_date/>
+<remote_sys_id>6608d6af476c939000e77bb4416d43ce</remote_sys_id>
+<state>loaded</state>
+<sys_id>6608d6af476c939000e77bb4416d43ce</sys_id>
+<parent>b938a26647685b5000e77bb4416d4339</parent>
+<remote_base_update_set>b938a26647685b5000e77bb4416d4339</remote_base_update_set>
+</sys_remote_update_set>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application>global</application>
+<category>customer</category>
+<comments/>
+<name>sys_ui_policy_282a1ae347ac939000e77bb4416d4371</name>
+<payload>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;record_update sys_domain=&quot;global&quot; table=&quot;sys_ui_policy&quot;&gt;&lt;sys_ui_policy action=&quot;INSERT_OR_UPDATE&quot;&gt;&lt;active&gt;true&lt;/active&gt;&lt;conditions/&gt;&lt;description/&gt;&lt;global&gt;true&lt;/global&gt;&lt;inherit&gt;false&lt;/inherit&gt;&lt;isolate_script&gt;true&lt;/isolate_script&gt;&lt;model_id/&gt;&lt;model_table/&gt;&lt;on_load&gt;true&lt;/on_load&gt;&lt;order&gt;100&lt;/order&gt;&lt;reverse_if_false&gt;true&lt;/reverse_if_false&gt;&lt;run_scripts&gt;false&lt;/run_scripts&gt;&lt;script_false&gt;&lt;![CDATA[function onCondition() {
+
+}]]&gt;&lt;/script_false&gt;&lt;script_true&gt;&lt;![CDATA[function onCondition() {
+
+}]]&gt;&lt;/script_true&gt;&lt;set_values/&gt;&lt;short_description&gt;Mandatory Fields&lt;/short_description&gt;&lt;sys_class_name&gt;sys_ui_policy&lt;/sys_class_name&gt;&lt;sys_created_by&gt;eugene.sikorski&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2026-11-20 14:07:26&lt;/sys_created_on&gt;&lt;sys_domain&gt;global&lt;/sys_domain&gt;&lt;sys_domain_path&gt;/&lt;/sys_domain_path&gt;&lt;sys_id&gt;282a1ae347ac939000e77bb4416d4371&lt;/sys_id&gt;&lt;sys_mod_count&gt;0&lt;/sys_mod_count&gt;&lt;sys_name&gt;Mandatory Fields&lt;/sys_name&gt;&lt;sys_overrides/&gt;&lt;sys_package display_value=&quot;Global&quot; source=&quot;global&quot;&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_scope display_value=&quot;Global&quot;&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_ui_policy_282a1ae347ac939000e77bb4416d4371&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;eugene.sikorski&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2026-11-20 14:07:26&lt;/sys_updated_on&gt;&lt;table&gt;change_request&lt;/table&gt;&lt;ui_type&gt;0&lt;/ui_type&gt;&lt;view/&gt;&lt;/sys_ui_policy&gt;&lt;/record_update&gt;</payload>
+<payload_hash>-63349100</payload_hash>
+<remote_update_set>6608d6af476c939000e77bb4416d43ce</remote_update_set>
+<replace_on_upgrade>0</replace_on_upgrade>
+<sys_created_by>eugene.sikorski</sys_created_by>
+<sys_created_on>2026-11-20 14:07:26</sys_created_on>
+<sys_id>433a1ee347ac939000e77bb4416d4358</sys_id>
+<sys_updated_by>eugene.sikorski</sys_updated_by>
+<sys_updated_on>2026-11-20 14:07:26</sys_updated_on>
+<table>change_request</table>
+<target_name>Mandatory Fields</target_name>
+<type>UI Policy</type>
+<update_domain>global</update_domain>
+<update_guid>8b3a1ee370ac93900f84821c2fa8f257</update_guid>
+<update_guid_history>8b3a1ee370ac93900f84821c2fa8f257:-63349100</update_guid_history>
+<update_set/>
+<view/>
+</sys_update_xml>
+<sys_update_xml action="INSERT_OR_UPDATE">
+<action>INSERT_OR_UPDATE</action>
+<application>global</application>
+<category>customer</category>
+<comments/>
+<name>sys_ui_policy_action_564a9ee347ac939000e77bb4416d4373</name>
+<payload>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&lt;record_update table=&quot;sys_ui_policy_action&quot;&gt;&lt;sys_ui_policy_action action=&quot;INSERT_OR_UPDATE&quot;&gt;&lt;cleared&gt;false&lt;/cleared&gt;&lt;disabled&gt;ignore&lt;/disabled&gt;&lt;field&gt;priority&lt;/field&gt;&lt;field_message/&gt;&lt;field_message_type&gt;none&lt;/field_message_type&gt;&lt;mandatory&gt;true&lt;/mandatory&gt;&lt;sys_class_name&gt;sys_ui_policy_action&lt;/sys_class_name&gt;&lt;sys_created_by&gt;eugene.sikorski&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2026-11-20 14:07:55&lt;/sys_created_on&gt;&lt;sys_id&gt;564a9ee347ac939000e77bb4416d4373&lt;/sys_id&gt;&lt;sys_mod_count&gt;0&lt;/sys_mod_count&gt;&lt;sys_name&gt;priority&lt;/sys_name&gt;&lt;sys_package display_value=&quot;Global&quot; source=&quot;global&quot;&gt;global&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_scope display_value=&quot;Global&quot;&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sys_ui_policy_action_564a9ee347ac939000e77bb4416d4373&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;eugene.sikorski&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2026-11-20 14:07:55&lt;/sys_updated_on&gt;&lt;table&gt;change_request&lt;/table&gt;&lt;ui_policy display_value=&quot;Mandatory Fields&quot;&gt;282a1ae347ac939000e77bb4416d4371&lt;/ui_policy&gt;&lt;value/&gt;&lt;value_action&gt;ignore&lt;/value_action&gt;&lt;visible&gt;ignore&lt;/visible&gt;&lt;/sys_ui_policy_action&gt;&lt;sys_translated_text action=&quot;delete_multiple&quot; query=&quot;documentkey=564a9ee347ac939000e77bb4416d4373&quot;/&gt;&lt;/record_update&gt;</payload>
+<payload_hash>-2000982779</payload_hash>
+<remote_update_set>6608d6af476c939000e77bb4416d43ce</remote_update_set>
+<replace_on_upgrade>0</replace_on_upgrade>
+<sys_created_by>eugene.sikorski</sys_created_by>
+<sys_created_on>2026-11-20 14:07:55</sys_created_on>
+<sys_id>0a5a122747ac939000e77bb4416d4394</sys_id>
+<sys_updated_by>eugene.sikorski</sys_updated_by>
+<sys_updated_on>2026-11-20 14:07:55</sys_updated_on>
+<table>change_request</table>
+<target_name>priority</target_name>
+<type>UI Policy Action</type>
+<update_domain>global</update_domain>
+<update_guid>425a1227acac93906db3b91c8a3c2994</update_guid>
+<update_guid_history>425a1227acac93906db3b91c8a3c2994:-2000982779</update_guid_history>
+<update_set/>
+<view/>
+</sys_update_xml>
+</unload>
